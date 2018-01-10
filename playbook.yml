@@ -1,0 +1,67 @@
+---
+- hosts: all
+  tasks:
+    - name: Install required packages
+      become: yes
+      apt: name={{ item }}
+      with_items:
+        - autoconf
+        - automake
+        - bison
+        - build-essential
+        - expat
+        - flex
+        - gawk
+        - gcc
+        - gdb
+        - git
+        - gperf
+        - g++
+        - help2man
+        - libc-dbg
+        - libexpat-dev
+        - libtool-bin
+        - lua5.1
+        - luarocks
+        - make
+        - ncurses-dev
+        - python-serial
+        - python
+        - python-dev
+        - screen
+        - sed
+        - texinfo
+        - unrar-free
+        - vim
+        - zip
+
+    - name: Install lua modules with luarocks
+      become: yes
+      shell: |
+        for m in bitlib luafilesystem md5 luaposix luasocket; do
+          sudo luarocks install $m;
+        done
+        touch .installed-luamodules
+      args:
+        creates: .installed-luamodules
+
+    - name: Clone ESP SDK
+      git:
+        repo: https://github.com/pfalcon/esp-open-sdk.git
+        dest: esp-open-sdk
+        recursive: yes
+        force: yes
+
+    - name: Clone NodeMCU firmware
+      git:
+        repo: https://github.com/nodemcu/nodemcu-firmware.git
+        dest: nodemcu-firmware
+
+    - copy:
+        dest: "{{ ansible_env.HOME }}/.profile"
+        content: ""
+        force: no
+
+    - lineinfile:
+        name: "{{ ansible_env.HOME }}/.profile"
+        line: PATH={{ ansible_env.HOME }}/esp-open-sdk/xtensa-lx106-elf/bin:$PATH
